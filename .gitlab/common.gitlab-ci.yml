@@ -1,0 +1,46 @@
+# 构建镜像并发布
+.build_common:
+  stage: build
+  when: always
+  tags:
+    - apple
+  # allow_failure: false
+  script:
+    # 登录Harbor镜像仓库
+    - docker login -u $REGISTRY_USERNAME -p $REGISTRY_PASSWORD $REGISTRY_DOMAIN
+    # 构建 Docker 镜像
+    - docker build --build-arg BRANCH=$APP_MODE --build-arg GITLAB_TOKEN=$PRIVATE_TOKEN -t $DOCKER_NAME1 -t $DOCKER_NAME2 -f $DOCKERFILE .
+    # 推送镜像
+    - docker image push $DOCKER_NAME1
+    - docker image push $DOCKER_NAME2
+    # 删除 Docker
+    - docker image rm -f $DOCKER_NAME1 $DOCKER_NAME2
+
+.main_build_common:
+  extends: .build_common
+  only:
+    - main
+.dev_build_common:
+  extends: .build_common
+  only:
+    - dev
+# 部署 K8S
+.deploy_common:
+  stage: deploy
+  when: always
+  tags:
+    - apple
+  before_script:
+    - echo "开始触发更新部署"
+  script:
+    - docker run --rm harbor.ant-lord.com/common/kubectl --kubeconfig $K8S_FILE set image deployment/$DEPLOYMENT_NAME $CONTAINER_NAME=$IMAGE -n $NAMESPACE
+    - docker run --rm harbor.ant-lord.com/common/kubectl --kubeconfig $K8S_FILE rollout restart deployment/$DEPLOYMENT_NAME -n $NAMESPACE
+
+.main_deploy_common:
+  extends: .deploy_common
+  only:
+    - main
+.dev_deploy_common:
+  extends: .deploy_common
+  only:
+    - dev

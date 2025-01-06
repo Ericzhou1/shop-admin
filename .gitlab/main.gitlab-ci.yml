@@ -1,0 +1,18 @@
+main_build:
+  extends: .main_build_common
+  variables:
+    # 构建镜像名称
+    DOCKER_NAME1: $REGISTRY_URI-prod:latest
+    DOCKER_NAME2: $REGISTRY_URI-prod:$CI_COMMIT_SHORT_SHA
+    APP_MODE: build:prod
+    DOCKERFILE: .gitlab/Dockerfile
+
+main_deploy:
+  extends: .main_deploy_common
+  variables:
+    # 正式环境 https://
+    DEPLOYMENT_NAME: $PROJECT_NAME-prod
+    CONTAINER_NAME: $PROJECT_NAME-prod
+    IMAGE: $REGISTRY_URI-prod:$CI_COMMIT_SHORT_SHA
+    NAMESPACE: xac-prod
+    K8S_FILE: /pai-api

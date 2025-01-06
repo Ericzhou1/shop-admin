@@ -1,0 +1,37 @@
+uat_build:
+  stage: build
+  when: always
+  variables:
+    # 构建镜像名称
+    DOCKER_NAME: $REGISTRY_DOMAIN/$REGISTRY_NAMESPACE/$PROJECT_NAME-uat:latest
+    BUILD_MODE: build:uat
+  only:
+    - uat
+  tags:
+    - apple
+  script:
+    # 登录Harbor镜像仓库
+    - docker login -u $REGISTRY_USERNAME -p $REGISTRY_PASSWORD $REGISTRY_DOMAIN
+    # 构建 Docker 镜像
+    - docker build --build-arg BUILD_MODE=$BUILD_MODE -t $DOCKER_NAME -f .gitlab/Dockerfile .
+    # 推送镜像
+    - docker image push $DOCKER_NAME
+    # 删除 Docker
+    - docker image rm -f $DOCKER_NAME
+uat_deploy:
+  stage: deploy
+  variables:
+    # UAT 环境 https://pai-uat.shieye-property.com
+    DEPLOYMENT_NAME: $PROJECT_NAME-uat
+    CONTAINER_NAME: $PROJECT_NAME-uat
+    IMAGE: $REGISTRY_DOMAIN/$REGISTRY_NAMESPACE/$PROJECT_NAME-uat:latest
+    NAMESPACE: pai-uat
+  only:
+    - uat
+  tags:
+    - apple
+  before_script:
+    - echo "开始触发更新部署"
+  script:
+    - docker run --rm harbor.ant-lord.com/common/kubectl:pai-uat --kubeconfig /config set image deployment/$DEPLOYMENT_NAME $CONTAINER_NAME=$IMAGE -n $NAMESPACE
+    - docker run --rm harbor.ant-lord.com/common/kubectl:pai-uat --kubeconfig /config rollout restart deployment/$DEPLOYMENT_NAME -n $NAMESPACE

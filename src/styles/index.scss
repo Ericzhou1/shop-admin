@@ -1,0 +1,45 @@
+@use './reset';
+
+:root {
+  interpolate-size: allow-keywords;
+
+  --el-table-current-row-bg-color: #c7e1f6;
+}
+
+.app-container {
+  padding: 15px;
+}
+
+.search-bar {
+  padding: 18px;
+  margin-bottom: 10px;
+  background-color: var(--el-bg-color-overlay);
+  border: 1px solid var(--el-border-color-light);
+  border-radius: 4px;
+  box-shadow: var(--el-box-shadow-light);
+}
+
+.table-container > .el-card__header {
+  padding: calc(var(--el-card-padding) - 8px) var(--el-card-padding);
+}
+
+.svg-icon {
+  vertical-align: text-bottom;
+}
+
+.link-type,
+.link-type:focus {
+  color: #337ab7;
+  cursor: pointer;
+
+  &:hover {
+    color: rgb(32 160 255);
+  }
+}
+
+.el-table {
+  th.el-table__cell {
+    color: #333;
+    background-color: #f2f3f5 !important;
+  }
+}
